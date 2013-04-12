@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>twoface by corsix</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">twoface</h1>
+        <p class="header">A Lua 5.1 style ABI on top of lua52.dll</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/corsix/twoface/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/corsix/twoface/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/corsix/twoface">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/corsix">corsix</a></p>
+
+
+      </header>
+      <section>
+        <h3>The Problem</h3>
+
+<p><img src="images/without_twoface.png" style="border:none"/><br/>Lua C libraries built against Lua 5.1 expect the Lua 5.1 ABI, whereas C programs which use Lua 5.2 expect the Lua 5.2 ABI. These two ABIs are significantly different, meaning that 5.2 programs cannot <nobr>a-priori</nobr> load 5.1 C libraries unless they are recompiled for 5.2.</p>
+
+<h3>The Solution</h3>
+
+<p><img src="images/with_twoface.png" style="border:none"/><br/><em>twoface</em> is a DLL which consumes the 5.2 ABI and presents a 5.1 style ABI, thereby allowing a 5.2 program to load most 5.1 C libraries without the need for any recompilation.</p>
+
+<h3>Known Limitations</h3>
+
+<ul>
+<li><em>twoface</em> is Windows-only, as it relies on there being a non-flat namespace for symbols.</li>
+<li>Some 5.1 C libraries, such as <a href="https://github.com/hoelzro/pluto">pluto</a>, rely on the layout of Lua 5.1's internal data structures. Such libraries will not work with <em>twoface</em>.</li>
+<li>Lua bytecode and source code are not translated by <em>twoface</em>; if a library is mixed C and Lua, then the Lua part of the library still needs to be 5.2 compatible.</li>
+<li>In some areas, the language semantics have significantly changed between 5.1 and 5.2. <em>twoface</em> tries to patch over a lot of the differences, but it can't do too much.</li>
+</ul>
+
+<h3>Differences to the actual 5.1 ABI</h3>
+
+<ul>
+<li>Emulation of <code>LUA_GLOBALSINDEX</code> can increase stack usage by one slot, which will cause problems for libraries which (wrongly) already used all of Lua's "internal" slots.</li>
+<li>Per-thread environments are gone; performing <code>lua_getfenv</code>/<code>lua_setfenv</code> on threads instead gets/replaces <code>LUA_GLOBALSINDEX</code>.</li>
+<li><code>lua_setfenv</code> fails on C closures which weren't created by <em>twoface</em>, and on Lua functions which don't report an <code>_ENV</code> upvalue. For such functions, <code>lua_getfenv</code> will return something, but it might not be accurate.</li>
+<li>Due to sharing of upvalues between closures, <code>lua_setfenv</code> on a Lua function may affect more than just one closure.</li>
+<li><code>lua_load</code> expects Lua 5.2 source code.</li>
+<li><code>lua_load</code> and <code>lua_dump</code> work with Lua 5.2 bytecode rather than Lua 5.1 bytecode.</li>
+<li>The debug event <code>LUA_HOOKTAILRET</code> has been swapped for <code>LUA_HOOKTAILCALL</code>.</li>
+<li>Explicitly calling <code>luaopen_base</code> won't load the <code>coroutine</code> library.</li>
+</ul>
+
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
